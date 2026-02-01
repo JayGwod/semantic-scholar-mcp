@@ -156,7 +156,7 @@ Comprehensive improvement plan for the Semantic Scholar MCP server addressing 8 
       "Add circuit_recovery_timeout setting with SS_CIRCUIT_RECOVERY_TIMEOUT env var (default: 30.0)",
       "Typecheck passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

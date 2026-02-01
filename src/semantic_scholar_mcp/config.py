@@ -16,6 +16,8 @@ class Settings:
         enable_auto_retry: Whether to automatically retry on rate limit errors.
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
         log_format: Logging format style (simple or detailed).
+        circuit_failure_threshold: Number of failures before circuit breaker opens.
+        circuit_recovery_timeout: Seconds before testing if service recovered.
     """
 
     def __init__(self) -> None:
@@ -43,6 +45,14 @@ class Settings:
         # Logging configuration
         self.log_level: str = os.environ.get("SS_LOG_LEVEL", "INFO")
         self.log_format: str = os.environ.get("SS_LOG_FORMAT", "simple")
+
+        # Circuit breaker configuration
+        self.circuit_failure_threshold: int = int(
+            os.environ.get("SS_CIRCUIT_FAILURE_THRESHOLD", "5")
+        )
+        self.circuit_recovery_timeout: float = float(
+            os.environ.get("SS_CIRCUIT_RECOVERY_TIMEOUT", "30.0")
+        )
 
     @property
     def has_api_key(self) -> bool:
