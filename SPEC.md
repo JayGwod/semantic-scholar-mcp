@@ -35,7 +35,7 @@ Comprehensive improvement plan for the Semantic Scholar MCP server addressing 8 
       "Support simple and detailed format styles",
       "Typecheck passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

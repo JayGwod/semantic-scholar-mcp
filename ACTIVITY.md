@@ -33,3 +33,24 @@ Append activity log at bottom. Follow the template:
 - pytest: PASS (132 passed)
 
 **Blockers:** None
+
+### 2026-02-01 15:27 (CET)
+
+**Tasks completed:** US-1 - Add logging configuration settings to config.py
+
+**Current task:** US-2 - Create logging_config.py module
+
+**Changes made:**
+- Created `src/semantic_scholar_mcp/logging_config.py`
+- Implemented `setup_logging()` function with level and format_style parameters
+- Implemented `get_logger(name)` function returning namespaced logger
+- Supports "simple" and "detailed" format styles
+- Uses settings from config.py for defaults
+
+**Verification:**
+- ruff format: PASS (1 file reformatted)
+- ruff check: PASS
+- ty check: PASS (2 pre-existing type errors unrelated to changes)
+- pytest: PASS (132 passed)
+
+**Blockers:** None
