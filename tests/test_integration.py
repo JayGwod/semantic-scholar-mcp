@@ -2,17 +2,24 @@
 
 These tests hit the actual API and verify end-to-end functionality.
 Run with: uv run pytest tests/test_integration.py -v -m integration
+
+On corporate networks with SSL inspection, set:
+    DISABLE_SSL_VERIFY=true uv run pytest tests/test_integration.py -v -m integration
 """
 
 import asyncio
+import logging
 
 import pytest
 import pytest_asyncio
 
 from semantic_scholar_mcp.client import SemanticScholarClient
+from semantic_scholar_mcp.config import settings
 from semantic_scholar_mcp.paper_tracker import PaperTracker, get_tracker
 from semantic_scholar_mcp.tools._common import set_client_getter
 from semantic_scholar_mcp.tools.papers import get_paper_details, search_papers
+
+logger = logging.getLogger(__name__)
 
 # Mark all tests in this module as integration tests
 pytestmark = pytest.mark.integration
@@ -20,7 +27,19 @@ pytestmark = pytest.mark.integration
 
 @pytest_asyncio.fixture
 async def real_client():
-    """Create a real client for integration tests."""
+    """Create a real client for integration tests.
+
+    Respects DISABLE_SSL_VERIFY environment variable for corporate networks
+    with SSL inspection. The client uses settings.disable_ssl_verify which
+    reads from this environment variable.
+    """
+    # Log warning if SSL verification is disabled
+    if settings.disable_ssl_verify:
+        logger.warning(
+            "SSL verification disabled for integration tests. "
+            "This should only be used on networks with SSL inspection."
+        )
+
     client = SemanticScholarClient()
     set_client_getter(lambda: client)
     yield client

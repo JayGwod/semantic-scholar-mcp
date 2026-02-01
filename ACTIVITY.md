@@ -113,4 +113,28 @@ Append activity log at bottom. Follow the template:
 
 ---
 
+### 2026-02-01 21:50 (CET)
+
+**Tasks completed:** US-1, US-2, US-3, US-4
+
+**Current task:** US-5 - Add SSL bypass support for integration tests
+
+**Changes made:**
+- Modified `tests/test_integration.py`:
+  - Added import for `logging` and `settings` from config
+  - Added module-level logger
+  - Updated `real_client` fixture docstring to explain SSL bypass support
+  - Added warning log when `settings.disable_ssl_verify` is True
+  - Added documentation in module docstring explaining how to use DISABLE_SSL_VERIFY
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS (1 unused import auto-fixed)
+- ty check: PASS (3 pre-existing issues in other files)
+- pytest: PASS (184 passed, 6 deselected)
+
+**Blockers:** None
+
+---
+
 ### 2026-02-01 21:23 (CET)
