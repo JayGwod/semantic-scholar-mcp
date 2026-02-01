@@ -703,3 +703,24 @@ Append activity log at bottom. Follow the template:
 - pytest: PASS (139 passed, 2 new tests)
 
 **Blockers:** None
+
+### 2026-02-01 17:06 (CET)
+
+**Tasks completed:** US-1 through US-31
+
+**Current task:** US-32 - Add cache concurrency tests
+
+**Changes made:**
+- Modified `tests/test_concurrency.py`
+  - Added imports for `CacheConfig` and `ResponseCache` from cache module
+  - Added `TestCacheConcurrency` class with:
+    - `test_concurrent_cache_operations()` with 5 writer and 5 reader threads
+    - Verifies no exceptions occur during concurrent access
+
+**Verification:**
+- ruff format: PASS (28 files unchanged)
+- ruff check: PASS
+- ty check: PASS (3 pre-existing type errors: singleton pattern issues)
+- pytest: PASS (140 passed, 1 new test)
+
+**Blockers:** None

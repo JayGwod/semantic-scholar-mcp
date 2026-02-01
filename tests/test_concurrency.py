@@ -4,6 +4,7 @@ import threading
 
 import pytest
 
+from semantic_scholar_mcp.cache import CacheConfig, ResponseCache
 from semantic_scholar_mcp.models import Paper
 from semantic_scholar_mcp.paper_tracker import PaperTracker, get_tracker
 
@@ -74,6 +75,44 @@ class TestPaperTrackerConcurrency:
             threading.Thread(target=writer),
             threading.Thread(target=reader),
             threading.Thread(target=reader),
+        ]
+
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(errors) == 0
+
+
+class TestCacheConcurrency:
+    """Thread-safety tests for cache."""
+
+    def test_concurrent_cache_operations(self) -> None:
+        """Test concurrent cache reads and writes."""
+        cache = ResponseCache(CacheConfig(max_entries=1000))
+        errors: list[Exception] = []
+
+        def writer(thread_id: int) -> None:
+            try:
+                for i in range(100):
+                    cache.set(
+                        f"/endpoint/{thread_id}",
+                        {"i": i},
+                        {"data": f"value-{thread_id}-{i}"},
+                    )
+            except Exception as e:
+                errors.append(e)
+
+        def reader(thread_id: int) -> None:
+            try:
+                for i in range(100):
+                    _ = cache.get(f"/endpoint/{thread_id % 5}", {"i": i % 50})
+            except Exception as e:
+                errors.append(e)
+
+        threads = [threading.Thread(target=writer, args=(i,)) for i in range(5)] + [
+            threading.Thread(target=reader, args=(i,)) for i in range(5)
         ]
 
         for t in threads:
