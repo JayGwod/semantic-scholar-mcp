@@ -180,3 +180,32 @@ class ResponseCache:
                 "misses": self._stats["misses"],
                 "hit_rate": hit_rate,
             }
+
+
+# Global cache instance
+_cache: ResponseCache | None = None
+_cache_lock = threading.Lock()
+
+
+def get_cache() -> ResponseCache:
+    """Get or create the global cache instance.
+
+    Uses double-checked locking pattern with threading.Lock for thread-safety.
+    Initializes CacheConfig from settings.
+
+    Returns:
+        The global ResponseCache singleton instance.
+    """
+    global _cache
+    if _cache is None:
+        with _cache_lock:
+            if _cache is None:
+                from semantic_scholar_mcp.config import settings
+
+                config = CacheConfig(
+                    enabled=getattr(settings, "cache_enabled", True),
+                    default_ttl=getattr(settings, "cache_ttl", 300),
+                    paper_details_ttl=getattr(settings, "cache_paper_ttl", 3600),
+                )
+                _cache = ResponseCache(config)
+    return _cache

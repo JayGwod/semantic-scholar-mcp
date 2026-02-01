@@ -230,7 +230,7 @@ Comprehensive improvement plan for the Semantic Scholar MCP server addressing 8 
       "Initialize CacheConfig from settings",
       "Typecheck passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
