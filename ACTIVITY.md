@@ -405,3 +405,26 @@ Append activity log at bottom. Follow the template:
 - pytest: PASS (137 passed)
 
 **Blockers:** None
+
+### 2026-02-01 16:39 (CET)
+
+**Tasks completed:** US-1 through US-18
+
+**Current task:** US-19 - Create tools/_common.py with shared utilities
+
+**Changes made:**
+- Created `src/semantic_scholar_mcp/tools/_common.py`
+- Defined `DEFAULT_PAPER_FIELDS` constant
+- Defined `DEFAULT_AUTHOR_FIELDS` constant
+- Defined `PAPER_FIELDS_WITH_TLDR` constant
+- Implemented `get_tracker()` function (re-exports from paper_tracker)
+- Implemented `set_client_getter()` function for dependency injection
+- Implemented `get_client()` function returning the injected client
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS (1 auto-fix for import sorting)
+- ty check: PASS (3 pre-existing type errors: singleton pattern issues)
+- pytest: PASS (137 passed)
+
+**Blockers:** None

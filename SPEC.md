@@ -272,7 +272,7 @@ Comprehensive improvement plan for the Semantic Scholar MCP server addressing 8 
       "Implement set_client_getter() and get_client() functions",
       "Typecheck passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
