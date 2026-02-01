@@ -168,11 +168,12 @@ def create_rate_limiter(has_api_key: bool) -> TokenBucket:
         TokenBucket configured for the appropriate rate limit.
     """
     if has_api_key:
-        # With API key: 1 request per second (dedicated)
+        # With API key: 1 request per second (dedicated pool)
         return TokenBucket(rate=1.0, capacity=1.0)
     else:
-        # Without API key: ~16.67 requests per second (5000 per 5 min, shared)
-        # Use conservative estimate accounting for shared pool
+        # Without API key: 5000 requests per 5 minutes (~16.67 req/s) from shared pool
+        # Using 10 req/s with burst of 20 as conservative estimate
+        # to account for other users sharing the pool
         return TokenBucket(rate=10.0, capacity=20.0)
 
 

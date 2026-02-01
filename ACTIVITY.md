@@ -113,6 +113,27 @@ Append activity log at bottom. Follow the template:
 
 ---
 
+### 2026-02-01 22:36 (CET)
+
+**Tasks completed:** US-1, US-2, US-3, US-4, US-5, US-6, US-7, US-8, US-9, US-10, US-11
+
+**Current task:** US-12 - Fix misleading rate limiter comment
+
+**Changes made:**
+- Modified `src/semantic_scholar_mcp/rate_limiter.py`:
+  - Updated comment for API key case: "dedicated pool" instead of just "dedicated"
+  - Updated comment for no API key case: More detailed explanation of the 5000 req/5min shared pool and conservative 10 req/s estimate
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS
+- ty check: PASS (3 pre-existing issues in other files)
+- pytest: PASS (186 passed, 6 deselected)
+
+**Blockers:** None
+
+---
+
 ### 2026-02-01 22:35 (CET)
 
 **Tasks completed:** US-1, US-2, US-3, US-4, US-5, US-6, US-7, US-8, US-9, US-10
