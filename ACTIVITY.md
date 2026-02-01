@@ -661,3 +661,24 @@ Append activity log at bottom. Follow the template:
 - pytest (integration): PASS (3 new tests passed) - `test_search_with_year_filter` intermittently fails due to API rate limiting
 
 **Blockers:** None
+
+### 2026-02-01 17:04 (CET)
+
+**Tasks completed:** US-1 through US-29
+
+**Current task:** US-30 - Add rate limit integration tests
+
+**Changes made:**
+- Modified `tests/test_integration.py`
+  - Added `asyncio` import
+  - Added `TestRateLimitIntegration` class with:
+    - `test_multiple_requests_succeed()` making 3 sequential searches with 0.5s delays
+
+**Verification:**
+- ruff format: PASS (27 files unchanged)
+- ruff check: PASS
+- ty check: PASS (3 pre-existing type errors: singleton pattern issues)
+- pytest (unit): PASS (137 passed)
+- pytest (integration): PASS (1 passed) - test passes when API rate limits are not exhausted
+
+**Blockers:** None

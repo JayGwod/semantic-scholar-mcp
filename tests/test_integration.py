@@ -4,6 +4,8 @@ These tests hit the actual API and verify end-to-end functionality.
 Run with: uv run pytest tests/test_integration.py -v -m integration
 """
 
+import asyncio
+
 import pytest
 import pytest_asyncio
 
@@ -100,3 +102,16 @@ class TestWorkflowIntegration:
 
         assert len(tracked) == len(result)
         assert all(p.paperId in [t.paperId for t in tracked] for p in result)
+
+
+class TestRateLimitIntegration:
+    """Integration tests for rate limit handling."""
+
+    @pytest.mark.asyncio
+    async def test_multiple_requests_succeed(self, real_client: SemanticScholarClient) -> None:
+        """Test that multiple sequential requests succeed with rate limiting."""
+        # Make several requests in sequence
+        for i in range(3):
+            result = await search_papers(f"machine learning {i}", limit=2)
+            assert isinstance(result, list) or "No papers found" in str(result)
+            await asyncio.sleep(0.5)  # Small delay between requests
