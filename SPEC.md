@@ -186,7 +186,7 @@ Comprehensive improvement plan for the Semantic Scholar MCP server addressing 8 
       "Add cache_paper_ttl setting with SS_CACHE_PAPER_TTL env var (default: 3600)",
       "Typecheck passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

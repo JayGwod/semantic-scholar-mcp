@@ -18,6 +18,9 @@ class Settings:
         log_format: Logging format style (simple or detailed).
         circuit_failure_threshold: Number of failures before circuit breaker opens.
         circuit_recovery_timeout: Seconds before testing if service recovered.
+        cache_enabled: Whether to enable response caching.
+        cache_ttl: Default cache TTL in seconds.
+        cache_paper_ttl: Cache TTL for paper details in seconds.
     """
 
     def __init__(self) -> None:
@@ -53,6 +56,15 @@ class Settings:
         self.circuit_recovery_timeout: float = float(
             os.environ.get("SS_CIRCUIT_RECOVERY_TIMEOUT", "30.0")
         )
+
+        # Cache configuration
+        self.cache_enabled: bool = os.environ.get("SS_CACHE_ENABLED", "true").lower() in (
+            "true",
+            "1",
+            "yes",
+        )
+        self.cache_ttl: int = int(os.environ.get("SS_CACHE_TTL", "300"))
+        self.cache_paper_ttl: int = int(os.environ.get("SS_CACHE_PAPER_TTL", "3600"))
 
     @property
     def has_api_key(self) -> bool:

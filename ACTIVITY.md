@@ -278,3 +278,24 @@ Append activity log at bottom. Follow the template:
 - pytest: PASS (137 passed)
 
 **Blockers:** None
+
+### 2026-02-01 16:31 (CET)
+
+**Tasks completed:** US-1 through US-12
+
+**Current task:** US-13 - Add cache configuration to config.py
+
+**Changes made:**
+- Modified `src/semantic_scholar_mcp/config.py`
+  - Added `cache_enabled` setting with `SS_CACHE_ENABLED` env var (default: true)
+  - Added `cache_ttl` setting with `SS_CACHE_TTL` env var (default: 300)
+  - Added `cache_paper_ttl` setting with `SS_CACHE_PAPER_TTL` env var (default: 3600)
+  - Updated class docstring with new attributes
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS
+- ty check: PASS (2 pre-existing type errors unrelated to changes)
+- pytest: PASS (137 passed)
+
+**Blockers:** None
