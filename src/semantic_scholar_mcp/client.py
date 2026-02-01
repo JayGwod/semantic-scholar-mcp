@@ -89,6 +89,14 @@ class SemanticScholarClient:
         timeout: Request timeout in seconds.
     """
 
+    # Endpoints that are read-only despite using POST (cacheable)
+    CACHEABLE_POST_ENDPOINTS: frozenset[str] = frozenset(
+        [
+            "/recommendations/v1/papers/",
+            "/recommendations/v1/papers",
+        ]
+    )
+
     def __init__(
         self,
         graph_api_base_url: str | None = None,
@@ -129,6 +137,20 @@ class SemanticScholarClient:
         if settings.has_api_key and settings.api_key:
             headers["x-api-key"] = settings.api_key
         return headers
+
+    def _is_cacheable_post(self, endpoint: str) -> bool:
+        """Check if POST endpoint should be cached.
+
+        Some POST endpoints are read-only (like recommendations) and can be
+        safely cached based on the request body.
+
+        Args:
+            endpoint: The API endpoint path.
+
+        Returns:
+            True if the endpoint is cacheable.
+        """
+        return any(endpoint.startswith(prefix) for prefix in self.CACHEABLE_POST_ENDPOINTS)
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create the async HTTP client.
@@ -402,6 +424,16 @@ class SemanticScholarClient:
             ConnectionError: If connection fails or times out.
             SemanticScholarError: For other API errors.
         """
+        # Check cache for cacheable POST endpoints
+        cache = get_cache()
+        is_cacheable = self._is_cacheable_post(endpoint)
+        if is_cacheable:
+            # Include json_data in cache key for POST requests
+            cache_params = {"_body": json_data, **(params or {})}
+            cached = cache.get(endpoint, cache_params)
+            if cached is not None:
+                return cached
+
         # Use circuit breaker for the actual request
         try:
             result = await self._circuit_breaker.call(
@@ -416,6 +448,11 @@ class SemanticScholarClient:
         # Unwrap non-circuit-breaker errors and raise them
         if isinstance(result, _NonCircuitBreakerResult):
             raise result.exception
+
+        # Cache cacheable POST responses
+        if is_cacheable:
+            cache_params = {"_body": json_data, **(params or {})}
+            cache.set(endpoint, cache_params, result)
 
         return result
 

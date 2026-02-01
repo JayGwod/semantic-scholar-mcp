@@ -113,6 +113,29 @@ Append activity log at bottom. Follow the template:
 
 ---
 
+### 2026-02-01 22:23 (CET)
+
+**Tasks completed:** US-1, US-2, US-3, US-4, US-5, US-6, US-7
+
+**Current task:** US-8 - Add POST request caching for recommendations
+
+**Changes made:**
+- Modified `src/semantic_scholar_mcp/client.py`:
+  - Added `CACHEABLE_POST_ENDPOINTS` class constant with `/recommendations/v1/papers/` and `/recommendations/v1/papers`
+  - Added `_is_cacheable_post()` method to check if endpoint should be cached
+  - Updated `post()` method to check cache before request for cacheable endpoints (including json_data in cache key)
+  - Updated `post()` method to cache successful responses for cacheable POST endpoints
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS
+- ty check: PASS (3 pre-existing issues in other files)
+- pytest: PASS (184 passed, 6 deselected)
+
+**Blockers:** None
+
+---
+
 ### 2026-02-01 22:10 (CET)
 
 **Tasks completed:** US-1, US-2, US-3, US-4, US-5, US-6
