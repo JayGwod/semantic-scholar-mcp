@@ -318,3 +318,28 @@ Append activity log at bottom. Follow the template:
 - pytest: PASS (137 passed)
 
 **Blockers:** None
+
+### 2026-02-01 16:33 (CET)
+
+**Tasks completed:** US-1 through US-14
+
+**Current task:** US-15 - Implement ResponseCache class
+
+**Changes made:**
+- Modified `src/semantic_scholar_mcp/cache.py`
+  - Implemented `ResponseCache` class
+  - Implemented `_make_key()` static method using SHA256 hash of endpoint + params
+  - Implemented `get()` method with TTL expiration check and LRU access order update
+  - Implemented `set()` method with endpoint-specific TTL and LRU eviction at max_entries
+  - Implemented `clear()` method to reset cache
+  - Implemented `get_stats()` method returning hits, misses, hit_rate
+  - Uses `threading.Lock` for thread-safety
+  - Added DEBUG logging for cache hits and stores
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS
+- ty check: PASS (2 pre-existing type errors unrelated to changes)
+- pytest: PASS (137 passed)
+
+**Blockers:** None
