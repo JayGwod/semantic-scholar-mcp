@@ -517,3 +517,25 @@ Append activity log at bottom. Follow the template:
 - pytest: PASS (137 passed)
 
 **Blockers:** None
+
+### 2026-02-01 16:52 (CET)
+
+**Tasks completed:** US-1 through US-23
+
+**Current task:** US-24 - Update tools/__init__.py with all exports
+
+**Changes made:**
+- Updated `src/semantic_scholar_mcp/tools/__init__.py`
+- Imported all paper tools from `tools.papers` (search_papers, get_paper_details, get_paper_citations, get_paper_references)
+- Imported all author tools from `tools.authors` (search_authors, get_author_details, find_duplicate_authors, consolidate_authors)
+- Imported all recommendation tools from `tools.recommendations` (get_recommendations, get_related_papers)
+- Imported all tracking tools from `tools.tracking` (list_tracked_papers, clear_tracked_papers, export_bibtex)
+- Added `__all__` list with all 13 tool names
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS
+- ty check: PASS (3 pre-existing type errors: singleton pattern issues)
+- pytest: PASS (137 passed)
+
+**Blockers:** None

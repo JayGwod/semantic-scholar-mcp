@@ -352,7 +352,7 @@ Comprehensive improvement plan for the Semantic Scholar MCP server addressing 8 
       "Add __all__ list with all 13 tool names",
       "Typecheck passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "refactor",
