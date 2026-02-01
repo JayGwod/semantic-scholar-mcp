@@ -8,6 +8,7 @@ import pytest
 from semantic_scholar_mcp.client import SemanticScholarClient
 from semantic_scholar_mcp.exceptions import (
     AuthenticationError,
+    ConnectionError,
     NotFoundError,
     RateLimitError,
     SemanticScholarError,
@@ -191,14 +192,14 @@ class TestNotFoundError:
             assert "/paper/nonexistent-id" in error_message
 
 
-class TestTimeoutHandling:
-    """Tests for timeout handling."""
+class TestConnectionErrorHandling:
+    """Tests for connection error handling."""
 
     @pytest.mark.asyncio
-    async def test_timeout_raises_appropriate_error(
+    async def test_timeout_raises_connection_error(
         self, mock_settings_no_api_key: MagicMock
     ) -> None:
-        """Test that timeout errors are raised appropriately."""
+        """Test that timeout errors are wrapped in ConnectionError."""
         with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.is_closed = False
@@ -207,8 +208,68 @@ class TestTimeoutHandling:
             mock_client_class.return_value = mock_client
 
             async with SemanticScholarClient() as client:
-                with pytest.raises(httpx.TimeoutException):
+                with pytest.raises(ConnectionError) as exc_info:
                     await client.get("/paper/search")
+
+            error_message = str(exc_info.value)
+            assert "timed out" in error_message.lower()
+
+    @pytest.mark.asyncio
+    async def test_connect_error_raises_connection_error(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that connection errors are wrapped in ConnectionError."""
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_client.get = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                with pytest.raises(ConnectionError) as exc_info:
+                    await client.get("/paper/search")
+
+            error_message = str(exc_info.value)
+            assert "Failed to connect" in error_message
+
+    @pytest.mark.asyncio
+    async def test_post_timeout_raises_connection_error(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that POST timeout errors are wrapped in ConnectionError."""
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_client.post = AsyncMock(side_effect=httpx.TimeoutException("Request timed out"))
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                with pytest.raises(ConnectionError) as exc_info:
+                    await client.post("/papers/", json_data={"positivePaperIds": ["123"]})
+
+            error_message = str(exc_info.value)
+            assert "timed out" in error_message.lower()
+
+    @pytest.mark.asyncio
+    async def test_post_connect_error_raises_connection_error(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that POST connection errors are wrapped in ConnectionError."""
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_client.post = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                with pytest.raises(ConnectionError) as exc_info:
+                    await client.post("/papers/", json_data={"positivePaperIds": ["123"]})
+
+            error_message = str(exc_info.value)
+            assert "Failed to connect" in error_message
 
     @pytest.mark.asyncio
     async def test_client_uses_configured_timeout(

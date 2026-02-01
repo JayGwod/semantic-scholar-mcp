@@ -8,6 +8,7 @@ import httpx
 from semantic_scholar_mcp.config import settings
 from semantic_scholar_mcp.exceptions import (
     AuthenticationError,
+    ConnectionError,
     NotFoundError,
     RateLimitError,
     SemanticScholarError,
@@ -178,6 +179,7 @@ class SemanticScholarClient:
         Raises:
             RateLimitError: If rate limit is exceeded.
             NotFoundError: If resource is not found.
+            ConnectionError: If connection fails or times out.
             SemanticScholarError: For other API errors.
         """
         base_url = (
@@ -190,7 +192,12 @@ class SemanticScholarClient:
         logger.info("API request: method=GET endpoint=%s params=%s", endpoint, params)
 
         client = await self._get_client()
-        response = await client.get(url, params=params)
+        try:
+            response = await client.get(url, params=params)
+        except httpx.ConnectError as e:
+            raise ConnectionError(f"Failed to connect to Semantic Scholar API: {e}") from e
+        except httpx.TimeoutException as e:
+            raise ConnectionError(f"Request timed out: {e}") from e
         return await self._handle_response(response, endpoint)
 
     async def post(
@@ -215,6 +222,7 @@ class SemanticScholarClient:
         Raises:
             RateLimitError: If rate limit is exceeded.
             NotFoundError: If resource is not found.
+            ConnectionError: If connection fails or times out.
             SemanticScholarError: For other API errors.
         """
         base_url = (
@@ -227,7 +235,12 @@ class SemanticScholarClient:
         logger.info("API request: method=POST endpoint=%s params=%s", endpoint, params)
 
         client = await self._get_client()
-        response = await client.post(url, json=json_data, params=params)
+        try:
+            response = await client.post(url, json=json_data, params=params)
+        except httpx.ConnectError as e:
+            raise ConnectionError(f"Failed to connect to Semantic Scholar API: {e}") from e
+        except httpx.TimeoutException as e:
+            raise ConnectionError(f"Request timed out: {e}") from e
         return await self._handle_response(response, endpoint)
 
     def _get_retry_config(self) -> RetryConfig:

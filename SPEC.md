@@ -102,7 +102,7 @@ Comprehensive improvement plan for the Semantic Scholar MCP server addressing 8 
       "Apply same wrapping in post() method",
       "Typecheck passes"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

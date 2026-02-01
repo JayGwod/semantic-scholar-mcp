@@ -143,3 +143,31 @@ Append activity log at bottom. Follow the template:
 - pytest: PASS (134 passed - 2 new tests added)
 
 **Blockers:** None
+
+### 2026-02-01 16:23 (CET)
+
+**Tasks completed:** US-1, US-2, US-3, US-4, US-5, US-6
+
+**Current task:** US-7 - Add connection error handling in client.py
+
+**Changes made:**
+- Modified `src/semantic_scholar_mcp/client.py`
+  - Added `ConnectionError` to imports from exceptions
+  - Updated `get()` method to wrap `httpx.ConnectError` and `httpx.TimeoutException` in `ConnectionError`
+  - Updated `post()` method with same wrapping
+  - Updated docstrings to document `ConnectionError` exception
+- Modified `tests/test_client.py`
+  - Added `ConnectionError` to imports
+  - Renamed `TestTimeoutHandling` class to `TestConnectionErrorHandling`
+  - Updated `test_timeout_raises_appropriate_error` to expect `ConnectionError` instead of `httpx.TimeoutException`
+  - Added `test_connect_error_raises_connection_error` for GET requests
+  - Added `test_post_timeout_raises_connection_error` for POST timeouts
+  - Added `test_post_connect_error_raises_connection_error` for POST connection errors
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS
+- ty check: PASS (2 pre-existing type errors unrelated to changes)
+- pytest: PASS (137 passed - 3 new tests added)
+
+**Blockers:** None
