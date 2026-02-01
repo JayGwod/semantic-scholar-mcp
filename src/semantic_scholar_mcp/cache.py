@@ -10,6 +10,13 @@ from typing import Any
 
 from semantic_scholar_mcp.logging_config import get_logger
 
+__all__ = [
+    "CacheConfig",
+    "CacheEntry",
+    "ResponseCache",
+    "get_cache",
+]
+
 logger = get_logger("cache")
 
 
