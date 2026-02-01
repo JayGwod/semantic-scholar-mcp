@@ -447,3 +447,215 @@ class TestClientContextManager:
 
             # Verify aclose was called
             mock_client.aclose.assert_called_once()
+
+
+class TestCircuitBreakerIntegration:
+    """Tests for circuit breaker integration with the client."""
+
+    @pytest.mark.asyncio
+    async def test_circuit_opens_after_consecutive_failures(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that circuit opens after N consecutive connection errors."""
+        # Configure circuit breaker with low threshold for testing
+        mock_settings_no_api_key.circuit_failure_threshold = 3
+        mock_settings_no_api_key.circuit_recovery_timeout = 30.0
+
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            # Simulate connection errors
+            mock_client.get = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                # Make requests until circuit opens
+                for i in range(3):
+                    with pytest.raises(ConnectionError):
+                        await client.get("/paper/search")
+
+                # Next request should fail fast due to open circuit
+                with pytest.raises(ConnectionError) as exc_info:
+                    await client.get("/paper/search")
+
+                # Verify it's a circuit breaker error, not a connection error
+                assert "circuit breaker" in str(exc_info.value).lower()
+
+    @pytest.mark.asyncio
+    async def test_circuit_rejects_when_open(self, mock_settings_no_api_key: MagicMock) -> None:
+        """Test that requests fail fast when circuit is open."""
+        mock_settings_no_api_key.circuit_failure_threshold = 2
+        mock_settings_no_api_key.circuit_recovery_timeout = 60.0  # Long timeout
+
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_client.get = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                # Trip the circuit breaker
+                for _ in range(2):
+                    with pytest.raises(ConnectionError):
+                        await client.get("/paper/search")
+
+                # Verify subsequent requests fail fast
+                call_count_before = mock_client.get.call_count
+
+                with pytest.raises(ConnectionError) as exc_info:
+                    await client.get("/paper/search")
+
+                # No new network call should have been made
+                assert mock_client.get.call_count == call_count_before
+                assert "circuit breaker" in str(exc_info.value).lower()
+
+    @pytest.mark.asyncio
+    async def test_circuit_half_open_after_timeout(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that circuit transitions to half-open after recovery timeout."""
+        mock_settings_no_api_key.circuit_failure_threshold = 2
+        mock_settings_no_api_key.circuit_recovery_timeout = 0.1  # Short timeout for testing
+
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            # First fail, then succeed
+            mock_client.get = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                # Trip the circuit breaker
+                for _ in range(2):
+                    with pytest.raises(ConnectionError):
+                        await client.get("/paper/search")
+
+                # Wait for recovery timeout
+                import asyncio
+
+                await asyncio.sleep(0.15)
+
+                # Circuit should now be half-open and allow a test call
+                # The call will fail but it proves we got past the open state
+                call_count_before = mock_client.get.call_count
+
+                with pytest.raises(ConnectionError):
+                    await client.get("/paper/search")
+
+                # A new network call should have been made
+                assert mock_client.get.call_count > call_count_before
+
+    @pytest.mark.asyncio
+    async def test_circuit_closes_on_successful_half_open(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that circuit closes after successful half-open call."""
+        mock_settings_no_api_key.circuit_failure_threshold = 2
+        mock_settings_no_api_key.circuit_recovery_timeout = 0.1  # Short timeout for testing
+
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            # Start with failures, then succeed
+            call_count = 0
+
+            def side_effect(*args, **kwargs):
+                nonlocal call_count
+                call_count += 1
+                if call_count <= 2:
+                    raise httpx.ConnectError("Connection refused")
+                # Return success after half-open
+                return create_mock_response(status_code=200, json_data={"data": "test"})
+
+            mock_client.get = AsyncMock(side_effect=side_effect)
+
+            async with SemanticScholarClient() as client:
+                # Trip the circuit breaker
+                for _ in range(2):
+                    with pytest.raises(ConnectionError):
+                        await client.get("/paper/search")
+
+                # Wait for recovery timeout
+                import asyncio
+
+                await asyncio.sleep(0.15)
+
+                # Successful half-open call should close the circuit
+                result = await client.get("/paper/search")
+                assert result == {"data": "test"}
+
+                # Subsequent calls should work normally
+                result2 = await client.get("/paper/search")
+                assert result2 == {"data": "test"}
+
+    @pytest.mark.asyncio
+    async def test_rate_limit_does_not_trip_circuit(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that 429 rate limit errors do not trip the circuit breaker."""
+        mock_settings_no_api_key.circuit_failure_threshold = 2
+        mock_settings_no_api_key.circuit_recovery_timeout = 30.0
+
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            # Simulate rate limit responses
+            mock_response = create_mock_response(status_code=429, text="Rate limit exceeded")
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                # Make multiple rate-limited requests
+                for _ in range(5):
+                    with pytest.raises(RateLimitError):
+                        await client.get("/paper/search")
+
+                # Circuit should still be closed - verify by checking that
+                # subsequent requests still hit the network
+                call_count_before = mock_client.get.call_count
+
+                with pytest.raises(RateLimitError):
+                    await client.get("/paper/search")
+
+                # A network call should have been made (circuit not open)
+                assert mock_client.get.call_count == call_count_before + 1
+
+    @pytest.mark.asyncio
+    async def test_not_found_does_not_trip_circuit(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that 404 not found errors do not trip the circuit breaker."""
+        mock_settings_no_api_key.circuit_failure_threshold = 2
+        mock_settings_no_api_key.circuit_recovery_timeout = 30.0
+
+        with patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            # Simulate 404 responses
+            mock_response = create_mock_response(status_code=404, text="Not found")
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                # Make multiple not-found requests
+                for _ in range(5):
+                    with pytest.raises(NotFoundError):
+                        await client.get("/paper/nonexistent")
+
+                # Circuit should still be closed - verify by checking that
+                # subsequent requests still hit the network
+                call_count_before = mock_client.get.call_count
+
+                with pytest.raises(NotFoundError):
+                    await client.get("/paper/nonexistent")
+
+                # A network call should have been made (circuit not open)
+                assert mock_client.get.call_count == call_count_before + 1

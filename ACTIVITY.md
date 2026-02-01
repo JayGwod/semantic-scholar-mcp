@@ -87,4 +87,30 @@ Append activity log at bottom. Follow the template:
 
 ---
 
+### 2026-02-01 21:48 (CET)
+
+**Tasks completed:** US-1, US-2, US-3
+
+**Current task:** US-4 - Add circuit breaker integration tests in test_client.py
+
+**Changes made:**
+- Modified `tests/test_client.py`:
+  - Added `TestCircuitBreakerIntegration` class with 6 tests:
+    - `test_circuit_opens_after_consecutive_failures()` - verifies circuit opens after N connection errors
+    - `test_circuit_rejects_when_open()` - verifies requests fail fast when circuit is open
+    - `test_circuit_half_open_after_timeout()` - verifies state transition after recovery timeout
+    - `test_circuit_closes_on_successful_half_open()` - verifies circuit closes after success
+    - `test_rate_limit_does_not_trip_circuit()` - verifies 429 errors do not trip circuit
+    - `test_not_found_does_not_trip_circuit()` - verifies 404 errors do not trip circuit
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS
+- ty check: PASS (3 pre-existing issues in other files)
+- pytest: PASS (184 passed, 6 deselected)
+
+**Blockers:** None
+
+---
+
 ### 2026-02-01 21:23 (CET)
