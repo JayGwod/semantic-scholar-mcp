@@ -10,6 +10,7 @@ Rate limits:
 import asyncio
 import logging
 import random
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
@@ -38,6 +39,63 @@ class RetryConfig:
     max_delay: float = 60.0
     exponential_base: float = 2.0
     jitter: float = 0.1
+
+
+@dataclass
+class TokenBucket:
+    """Token bucket rate limiter for proactive rate limiting.
+
+    This prevents hitting API rate limits by controlling request frequency
+    before sending requests, rather than reacting to 429 errors.
+
+    Attributes:
+        rate: Tokens added per second.
+        capacity: Maximum tokens (burst size).
+    """
+
+    rate: float  # tokens per second
+    capacity: float  # max burst
+    _tokens: float = field(init=False)
+    _last_update: float = field(init=False)
+    _lock: asyncio.Lock = field(init=False, default_factory=asyncio.Lock)
+
+    def __post_init__(self) -> None:
+        """Initialize tokens and timestamp."""
+        self._tokens = self.capacity
+        self._last_update = time.monotonic()
+
+    async def acquire(self, tokens: float = 1.0) -> float:
+        """Acquire tokens, waiting if necessary.
+
+        Args:
+            tokens: Number of tokens to acquire (default 1).
+
+        Returns:
+            Time waited in seconds (0 if no wait needed).
+        """
+        async with self._lock:
+            now = time.monotonic()
+
+            # Add tokens based on elapsed time
+            elapsed = now - self._last_update
+            self._tokens = min(self.capacity, self._tokens + elapsed * self.rate)
+            self._last_update = now
+
+            # If enough tokens, consume immediately
+            if self._tokens >= tokens:
+                self._tokens -= tokens
+                return 0.0
+
+            # Calculate wait time for needed tokens
+            needed = tokens - self._tokens
+            wait_time = needed / self.rate
+
+            # Wait and then consume
+            await asyncio.sleep(wait_time)
+            self._tokens = 0  # Consumed all available + waited for rest
+            self._last_update = time.monotonic()
+
+            return wait_time
 
 
 @dataclass

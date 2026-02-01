@@ -171,3 +171,25 @@ Append activity log at bottom. Follow the template:
 - pytest: PASS (137 passed - 3 new tests added)
 
 **Blockers:** None
+
+### 2026-02-01 16:25 (CET)
+
+**Tasks completed:** US-1, US-2, US-3, US-4, US-5, US-6, US-7
+
+**Current task:** US-8 - Add TokenBucket class to rate_limiter.py
+
+**Changes made:**
+- Modified `src/semantic_scholar_mcp/rate_limiter.py`
+  - Added `time` import for `time.monotonic()`
+  - Added `TokenBucket` dataclass with `rate` and `capacity` parameters
+  - Implemented async `acquire()` method that waits if tokens unavailable
+  - Uses `asyncio.Lock` for thread-safety
+  - Tracks tokens and last_update time using `time.monotonic()`
+
+**Verification:**
+- ruff format: PASS
+- ruff check: PASS
+- ty check: PASS (2 pre-existing type errors unrelated to changes)
+- pytest: PASS (137 passed)
+
+**Blockers:** None
