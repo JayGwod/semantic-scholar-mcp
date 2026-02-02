@@ -134,3 +134,23 @@ Append activity log at bottom. Follow the template:
 - `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
 
 **Blockers:** None
+
+### 2026-02-02 14:46 (CET)
+
+**Task completed:** US-6: Add tests for configuration validation
+
+**Changes made:**
+- `tests/test_config.py`: Created new test file with 54 tests covering:
+  - TestDefaultConfiguration: Tests for default configuration values (8 tests)
+  - TestEnvironmentVariableLoading: Tests for environment variable loading (15 tests)
+  - TestApiKeyPresenceHandling: Tests for API key presence detection (3 tests)
+  - TestApiKeyAbsenceHandling: Tests for handling when API key is absent (2 tests)
+  - TestBooleanEnvironmentVariableHandling: Parametrized tests for boolean parsing (26 tests)
+
+**Verification:**
+- `uv run ruff check src/ tests/`: All checks passed!
+- `uv run ruff format src/ tests/`: 32 files left unchanged
+- `uv run pytest -v`: 262 passed, 6 failed (integration tests failing due to SSL certificate issues - unrelated to this change)
+- `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
+
+**Blockers:** None

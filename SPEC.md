@@ -130,7 +130,7 @@ Code quality improvements for the Semantic Scholar MCP server addressing technic
       "Add test for API key absence handling",
       "All tests pass"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "testing",
