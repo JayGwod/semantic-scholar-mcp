@@ -115,3 +115,22 @@ Append activity log at bottom. Follow the template:
 - `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
 
 **Blockers:** None
+
+### 2026-02-02 14:43 (CET)
+
+**Task completed:** US-5: Add tests for server initialization and lifecycle
+
+**Changes made:**
+- `tests/test_server_init.py`: Created new test file with 15 tests covering:
+  - TestServerCreation: Tests for MCP server instance creation (3 tests)
+  - TestToolRegistration: Tests for tool registration verification (5 tests)
+  - TestClientSingleton: Tests for client singleton behavior (3 tests)
+  - TestCleanupHandler: Tests for cleanup handler registration and behavior (4 tests)
+
+**Verification:**
+- `uv run ruff check src/ tests/`: All checks passed!
+- `uv run ruff format src/ tests/`: 31 files left unchanged
+- `uv run pytest -v`: 208 passed, 6 failed (integration tests failing due to SSL certificate issues - unrelated to this change)
+- `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
+
+**Blockers:** None

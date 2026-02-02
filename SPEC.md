@@ -115,7 +115,7 @@ Code quality improvements for the Semantic Scholar MCP server addressing technic
       "Use appropriate fixtures from conftest.py",
       "All tests pass"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "testing",
