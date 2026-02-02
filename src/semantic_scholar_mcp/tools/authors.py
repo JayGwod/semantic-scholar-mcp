@@ -20,6 +20,7 @@ from semantic_scholar_mcp.tools._common import (
     DEFAULT_PAPER_FIELDS,
     get_client,
     get_tracker,
+    sort_by_citations,
 )
 
 
@@ -275,11 +276,7 @@ async def find_duplicate_authors(
     for orcid, authors in orcid_groups.items():
         if len(authors) > 1:
             # Sort by citation count to pick primary
-            sorted_authors = sorted(
-                authors,
-                key=lambda a: a.citationCount or 0,
-                reverse=True,
-            )
+            sorted_authors = sort_by_citations(authors)
             primary = sorted_authors[0]
             candidates = sorted_authors[1:]
 
@@ -302,11 +299,7 @@ async def find_duplicate_authors(
         # Filter out already processed authors
         remaining = [a for a in authors if a.authorId and a.authorId not in processed_author_ids]
         if len(remaining) > 1:
-            sorted_authors = sorted(
-                remaining,
-                key=lambda a: a.citationCount or 0,
-                reverse=True,
-            )
+            sorted_authors = sort_by_citations(remaining)
             primary = sorted_authors[0]
             candidates = sorted_authors[1:]
 
@@ -406,11 +399,7 @@ async def consolidate_authors(
         confidence = 0.95
 
     # Sort by citation count to determine primary
-    sorted_authors = sorted(
-        authors,
-        key=lambda a: a.citationCount or 0,
-        reverse=True,
-    )
+    sorted_authors = sort_by_citations(authors)
     primary = sorted_authors[0]
 
     # Merge author records
@@ -570,11 +559,7 @@ async def get_author_top_papers(
         all_papers = [p for p in all_papers if (p.citationCount or 0) >= min_citations]
 
     # Sort by citation count (highest first)
-    sorted_papers = sorted(
-        all_papers,
-        key=lambda p: p.citationCount or 0,
-        reverse=True,
-    )
+    sorted_papers = sort_by_citations(all_papers)
 
     # Take top N
     top_papers = sorted_papers[:top_n]

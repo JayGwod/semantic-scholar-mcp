@@ -4,11 +4,19 @@ This module provides shared constants, client accessor, and tracker accessor
 for all tool modules to use consistently.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from typing import Protocol
 
 from semantic_scholar_mcp.client import SemanticScholarClient
 from semantic_scholar_mcp.paper_tracker import PaperTracker
 from semantic_scholar_mcp.paper_tracker import get_tracker as _get_tracker
+
+
+class HasCitationCount(Protocol):
+    """Protocol for objects that have a citationCount attribute."""
+
+    citationCount: int | None
+
 
 # Default fields to request from the API for comprehensive paper data
 DEFAULT_PAPER_FIELDS = (
@@ -43,6 +51,28 @@ def build_nested_paper_fields(prefix: str) -> str:
         'citingPaper.paperId,citingPaper.title,citingPaper.abstract,...'
     """
     return f"{prefix}.{DEFAULT_PAPER_FIELDS.replace(',', f',{prefix}.')}"
+
+
+def sort_by_citations[T: HasCitationCount](items: Sequence[T], *, reverse: bool = True) -> list[T]:
+    """Sort items by citation count.
+
+    Generic helper function for sorting papers, authors, or any object with
+    a citationCount attribute. Handles None values by treating them as 0.
+
+    Args:
+        items: Sequence of items with citationCount attribute.
+        reverse: If True (default), sort in descending order (highest first).
+                 If False, sort in ascending order (lowest first).
+
+    Returns:
+        A new list of items sorted by citation count.
+
+    Example:
+        >>> papers = [paper1, paper2, paper3]
+        >>> top_papers = sort_by_citations(papers)  # Highest citations first
+        >>> low_papers = sort_by_citations(papers, reverse=False)  # Lowest first
+    """
+    return sorted(items, key=lambda x: x.citationCount or 0, reverse=reverse)
 
 
 def paper_not_found_message(paper_id: str) -> str:

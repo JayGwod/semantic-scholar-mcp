@@ -95,3 +95,23 @@ Append activity log at bottom. Follow the template:
 - `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
 
 **Blockers:** None
+
+### 2026-02-02 14:38 (CET)
+
+**Task completed:** US-4: Extract DRY helper for sorting by citations
+
+**Changes made:**
+- `src/semantic_scholar_mcp/tools/_common.py`: Added `HasCitationCount` Protocol class and `sort_by_citations[T: HasCitationCount]()` generic helper function with docstring using PEP 695 type parameter syntax
+- `src/semantic_scholar_mcp/tools/authors.py`: Updated import to include `sort_by_citations`; replaced 4 manual sorting patterns with calls to the helper:
+  - `find_duplicate_authors` - ORCID groups sorting (line 278)
+  - `find_duplicate_authors` - DBLP groups sorting (line 300)
+  - `consolidate_authors` - authors sorting (line 404)
+  - `get_author_top_papers` - papers sorting (line 562)
+
+**Verification:**
+- `uv run ruff check src/ tests/`: All checks passed!
+- `uv run ruff format src/ tests/`: 1 file reformatted, 29 files left unchanged
+- `uv run pytest -v`: 193 passed, 6 failed (integration tests failing due to SSL certificate issues - unrelated to this change)
+- `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
+
+**Blockers:** None
