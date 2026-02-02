@@ -154,3 +154,26 @@ Append activity log at bottom. Follow the template:
 - `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
 
 **Blockers:** None
+
+### 2026-02-02 14:50 (CET)
+
+**Task completed:** US-8: Add tests for error flow from client through tools
+
+**Changes made:**
+- `tests/test_error_propagation.py`: Created new test file with 24 tests covering:
+  - TestRateLimitErrorPropagation: Tests for RateLimitError with retry_after attribute (2 tests)
+  - TestNotFoundErrorPropagation: Tests for NotFoundError message propagation (2 tests)
+  - TestServerErrorPropagation: Tests for ServerError with status_code attribute (3 tests)
+  - TestAuthenticationErrorPropagation: Tests for AuthenticationError propagation (2 tests)
+  - TestAPIConnectionErrorPropagation: Tests for APIConnectionError including circuit breaker (3 tests)
+  - TestSearchPapersErrorHandling: Tests for error handling in search_papers tool (4 tests)
+  - TestGetPaperDetailsErrorHandling: Tests for error handling in get_paper_details tool (5 tests)
+  - TestErrorAttributePreservation: Tests for attribute preservation and inheritance (3 tests)
+
+**Verification:**
+- `uv run ruff check src/ tests/`: All checks passed!
+- `uv run ruff format src/ tests/`: 1 file reformatted, 32 files left unchanged
+- `uv run pytest -v`: 286 passed, 6 failed (integration tests failing due to SSL certificate issues - unrelated to this change); coverage at 89%
+- `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
+
+**Blockers:** None

@@ -148,7 +148,7 @@ Code quality improvements for the Semantic Scholar MCP server addressing technic
       "Test error handling in get_paper_details tool function",
       "All tests pass"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "testing",
