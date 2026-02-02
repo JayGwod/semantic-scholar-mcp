@@ -87,6 +87,12 @@ class TestDefaultConfiguration:
             settings = Settings()
             assert settings.default_citations_limit == 50
 
+    def test_default_large_response_threshold(self) -> None:
+        """Test default large response threshold is 50000 bytes."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.large_response_threshold == 50000
+
 
 class TestEnvironmentVariableLoading:
     """Tests for environment variable loading."""
@@ -198,6 +204,12 @@ class TestEnvironmentVariableLoading:
         with patch.dict(os.environ, {"SS_DEFAULT_CITATIONS_LIMIT": "100"}):
             settings = Settings()
             assert settings.default_citations_limit == 100
+
+    def test_large_response_threshold_from_environment(self) -> None:
+        """Test loading large response threshold from environment."""
+        with patch.dict(os.environ, {"SS_LARGE_RESPONSE_THRESHOLD": "100000"}):
+            settings = Settings()
+            assert settings.large_response_threshold == 100000
 
 
 class TestApiKeyPresenceHandling:
@@ -400,6 +412,24 @@ class TestDefaultLimitsValidation:
             assert settings.default_search_limit == 1
             assert settings.default_papers_limit == 1
             assert settings.default_citations_limit == 1
+
+    def test_large_response_threshold_clamped_to_max(self) -> None:
+        """Test that large response threshold above max is clamped to 10000000."""
+        with patch.dict(os.environ, {"SS_LARGE_RESPONSE_THRESHOLD": "20000000"}):
+            settings = Settings()
+            assert settings.large_response_threshold == 10000000
+
+    def test_large_response_threshold_clamped_to_min(self) -> None:
+        """Test that large response threshold below min is clamped to 1."""
+        with patch.dict(os.environ, {"SS_LARGE_RESPONSE_THRESHOLD": "0"}):
+            settings = Settings()
+            assert settings.large_response_threshold == 1
+
+    def test_large_response_threshold_invalid_uses_default(self) -> None:
+        """Test that invalid large response threshold uses default value."""
+        with patch.dict(os.environ, {"SS_LARGE_RESPONSE_THRESHOLD": "invalid"}):
+            settings = Settings()
+            assert settings.large_response_threshold == 50000
 
 
 class TestBooleanEnvironmentVariableHandling:

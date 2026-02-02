@@ -659,3 +659,130 @@ class TestCircuitBreakerIntegration:
 
                 # A network call should have been made (circuit not open)
                 assert mock_client.get.call_count == call_count_before + 1
+
+
+class TestLargeResponseLogging:
+    """Tests for large response size logging."""
+
+    @pytest.mark.asyncio
+    async def test_logs_warning_for_large_response(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that a warning is logged when response exceeds threshold."""
+        # Set threshold to 100 bytes for testing
+        mock_settings_no_api_key.large_response_threshold = 100
+
+        # Create a response with content larger than threshold
+        large_data = {"data": "x" * 200}  # More than 100 bytes when serialized
+
+        with (
+            patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class,
+            patch("semantic_scholar_mcp.client.logger") as mock_logger,
+        ):
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_response = create_mock_response(status_code=200, json_data=large_data)
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                await client.get("/paper/search")
+
+            # Verify warning was logged
+            mock_logger.warning.assert_called()
+            call_args = mock_logger.warning.call_args[0]
+            assert "Large API response" in call_args[0]
+            assert "/paper/search" in call_args[1]
+
+    @pytest.mark.asyncio
+    async def test_no_warning_for_small_response(self, mock_settings_no_api_key: MagicMock) -> None:
+        """Test that no warning is logged when response is below threshold."""
+        # Set threshold to 50000 bytes (default)
+        mock_settings_no_api_key.large_response_threshold = 50000
+
+        # Create a small response
+        small_data = {"data": "small"}
+
+        with (
+            patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class,
+            patch("semantic_scholar_mcp.client.logger") as mock_logger,
+        ):
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_response = create_mock_response(status_code=200, json_data=small_data)
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                await client.get("/paper/search")
+
+            # Verify no large response warning was logged
+            warning_calls = [
+                call
+                for call in mock_logger.warning.call_args_list
+                if "Large API response" in str(call)
+            ]
+            assert len(warning_calls) == 0
+
+    @pytest.mark.asyncio
+    async def test_logs_correct_response_size(self, mock_settings_no_api_key: MagicMock) -> None:
+        """Test that the logged size matches actual response content size."""
+        # Set threshold to 10 bytes for testing
+        mock_settings_no_api_key.large_response_threshold = 10
+
+        # Create response with known content size
+        known_content = b'{"test": "data"}'  # 16 bytes
+
+        with (
+            patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class,
+            patch("semantic_scholar_mcp.client.logger") as mock_logger,
+        ):
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_response = create_mock_response(
+                status_code=200, json_data={"test": "data"}, content=known_content
+            )
+            mock_client.get = AsyncMock(return_value=mock_response)
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                await client.get("/paper/search")
+
+            # Verify the logged size matches (16 bytes)
+            mock_logger.warning.assert_called()
+            call_args = mock_logger.warning.call_args[0]
+            assert call_args[2] == 16  # response_size argument
+
+    @pytest.mark.asyncio
+    async def test_logs_warning_for_large_post_response(
+        self, mock_settings_no_api_key: MagicMock
+    ) -> None:
+        """Test that a warning is logged for large POST responses."""
+        # Set threshold to 100 bytes for testing
+        mock_settings_no_api_key.large_response_threshold = 100
+
+        # Create a response with content larger than threshold
+        large_data = {"recommendedPapers": [{"paperId": "x" * 200}]}
+
+        with (
+            patch("semantic_scholar_mcp.client.httpx.AsyncClient") as mock_client_class,
+            patch("semantic_scholar_mcp.client.logger") as mock_logger,
+        ):
+            mock_client = AsyncMock()
+            mock_client.is_closed = False
+            mock_response = create_mock_response(status_code=200, json_data=large_data)
+            mock_response.request.method = "POST"
+            mock_client.post = AsyncMock(return_value=mock_response)
+            mock_client.aclose = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            async with SemanticScholarClient() as client:
+                await client.post("/papers/", json_data={"positivePaperIds": ["123"]}, params=None)
+
+            # Verify warning was logged
+            mock_logger.warning.assert_called()
+            call_args = mock_logger.warning.call_args[0]
+            assert "Large API response" in call_args[0]

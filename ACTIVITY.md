@@ -307,3 +307,29 @@ Append activity log at bottom. Follow the template:
 - `uv run ty check src/`: 3 pre-existing diagnostics (unrelated to this change)
 
 **Blockers:** None
+
+### 2026-02-02 23:39 (CET)
+
+**Task completed:** US-5: Log warnings for large API responses
+
+**Changes made:**
+- `src/semantic_scholar_mcp/config.py`: Added `large_response_threshold` configuration option with `SS_LARGE_RESPONSE_THRESHOLD` environment variable (default: 50000 bytes, max: 10000000 bytes). Updated Settings docstring.
+- `src/semantic_scholar_mcp/client.py`: Added response size check in `_handle_response()` method. Logs WARNING when response content size exceeds threshold, including endpoint and size in bytes.
+- `tests/conftest.py`: Added `large_response_threshold` attribute to mock settings fixtures. Updated `create_mock_response()` to include `content` parameter for testing response size.
+- `tests/test_client.py`: Added `TestLargeResponseLogging` test class with 4 tests:
+  - `test_logs_warning_for_large_response`: Verifies warning logged for large GET responses
+  - `test_no_warning_for_small_response`: Verifies no warning for small responses
+  - `test_logs_correct_response_size`: Verifies logged size matches actual content size
+  - `test_logs_warning_for_large_post_response`: Verifies warning logged for large POST responses
+- `tests/test_config.py`: Added tests for `large_response_threshold`:
+  - Default value test (50000 bytes)
+  - Environment variable loading test
+  - Validation tests (clamped to max, clamped to min, invalid uses default)
+
+**Verification:**
+- `uv run ruff check src/ tests/`: All checks passed!
+- `uv run ruff format src/ tests/`: 1 file reformatted, 33 files left unchanged
+- `uv run pytest -v -m "not integration"`: 376 passed; coverage at 89%
+- `uv run ty check src/`: 3 pre-existing diagnostics (unrelated to this change)
+
+**Blockers:** None

@@ -50,6 +50,7 @@ class Settings:
         default_search_limit: Default limit for paper search results.
         default_papers_limit: Default limit for author papers results.
         default_citations_limit: Default limit for citations/references results.
+        large_response_threshold: Byte threshold for logging large response warnings.
     """
 
     def __init__(self) -> None:
@@ -108,6 +109,11 @@ class Settings:
         )
         self.default_citations_limit: int = _parse_int_with_bounds(
             "SS_DEFAULT_CITATIONS_LIMIT", default=50, min_val=1, max_val=1000
+        )
+
+        # Response size logging threshold (in bytes)
+        self.large_response_threshold: int = _parse_int_with_bounds(
+            "SS_LARGE_RESPONSE_THRESHOLD", default=50000, min_val=1, max_val=10000000
         )
 
     @property

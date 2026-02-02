@@ -199,6 +199,14 @@ class SemanticScholarClient:
 
         # Success
         if response.status_code < 400:
+            # Check response size before parsing JSON
+            response_size = len(response.content)
+            if response_size > settings.large_response_threshold:
+                logger.warning(
+                    "Large API response: endpoint=%s size=%d bytes",
+                    endpoint,
+                    response_size,
+                )
             return response.json()
 
         # Rate limit exceeded

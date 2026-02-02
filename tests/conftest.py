@@ -42,6 +42,7 @@ def mock_settings_no_api_key() -> Generator[MagicMock]:
         )
         mock_settings.circuit_failure_threshold = 5
         mock_settings.circuit_recovery_timeout = 30.0
+        mock_settings.large_response_threshold = 50000
         yield mock_settings
 
 
@@ -57,6 +58,7 @@ def mock_settings_with_api_key() -> Generator[MagicMock]:
         )
         mock_settings.circuit_failure_threshold = 5
         mock_settings.circuit_recovery_timeout = 30.0
+        mock_settings.large_response_threshold = 50000
         yield mock_settings
 
 
@@ -83,6 +85,7 @@ def create_mock_response(
     json_data: dict[str, Any] | None = None,
     text: str = "",
     headers: dict[str, str] | None = None,
+    content: bytes | None = None,
 ) -> httpx.Response:
     """Create a mock httpx.Response object.
 
@@ -91,6 +94,7 @@ def create_mock_response(
         json_data: JSON response data.
         text: Response text for error messages.
         headers: Optional response headers.
+        content: Raw response content in bytes.
 
     Returns:
         Mock httpx.Response object.
@@ -102,6 +106,15 @@ def create_mock_response(
     response.request = MagicMock()
     response.request.method = "GET"
     response.headers = headers or {}
+    # Set content - if not provided, serialize json_data
+    if content is not None:
+        response.content = content
+    elif json_data:
+        import json
+
+        response.content = json.dumps(json_data).encode("utf-8")
+    else:
+        response.content = b""
     return response
 
 
