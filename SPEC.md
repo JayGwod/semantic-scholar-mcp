@@ -164,7 +164,7 @@ Code quality improvements for the Semantic Scholar MCP server addressing technic
       "Add tests for model deserialization (model_validate)",
       "All tests pass"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "testing",

@@ -177,3 +177,25 @@ Append activity log at bottom. Follow the template:
 - `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
 
 **Blockers:** None
+
+### 2026-02-02 14:55 (CET)
+
+**Task completed:** US-7: Add tests for Pydantic model validation
+
+**Changes made:**
+- `tests/test_models.py`: Created new test file with 53 tests covering:
+  - TestPaperModel: Tests for Paper model (required fields, optional fields, defaults) (7 tests)
+  - TestAuthorModel: Tests for Author model (required fields, optional fields, defaults) (5 tests)
+  - TestEdgeCases: Tests for edge cases (empty strings, None values, missing optional fields, empty lists, zero/negative/large integers, special characters, DBLP list/string) (11 tests)
+  - TestNestedModels: Tests for nested models (PaperExternalIds, Journal, PublicationVenue, OpenAccessPdf, Tldr, PaperWithTldr) (6 tests)
+  - TestContainerModels: Tests for container models (CitingPaper, ReferencePaper, SearchResult, AuthorSearchResult, RecommendationResult, AuthorPapersResult) (12 tests)
+  - TestAuthorExtendedModels: Tests for extended author models (AuthorWithPapers, AuthorGroup, AuthorConsolidationResult, AuthorTopPapers) (8 tests)
+  - TestModelSerialization: Tests for model serialization (model_dump) and deserialization (model_validate) round-trips (4 tests)
+
+**Verification:**
+- `uv run ruff check src/ tests/`: All checks passed!
+- `uv run ruff format src/ tests/`: 1 file reformatted, 33 files left unchanged
+- `uv run pytest -v`: 339 passed, 6 failed (integration tests failing due to SSL certificate issues - unrelated to this change); coverage at 89%
+- `uv run ty check src/`: 4 pre-existing diagnostics (unrelated to this change)
+
+**Blockers:** None
