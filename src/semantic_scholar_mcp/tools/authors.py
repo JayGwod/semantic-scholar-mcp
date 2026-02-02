@@ -16,6 +16,7 @@ from semantic_scholar_mcp.models import (
     Paper,
 )
 from semantic_scholar_mcp.tools._common import (
+    COMPACT_PAPER_FIELDS,
     DEFAULT_AUTHOR_FIELDS,
     DEFAULT_PAPER_FIELDS,
     get_client,
@@ -527,7 +528,7 @@ async def get_author_top_papers(
     fetch_limit = top_n * 3 if min_citations is not None else top_n
 
     papers_params: dict[str, str | int] = {
-        "fields": DEFAULT_PAPER_FIELDS,
+        "fields": COMPACT_PAPER_FIELDS,
         "limit": fetch_limit,
         "sort": "citationCount:desc",
     }

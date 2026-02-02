@@ -13,6 +13,7 @@ from semantic_scholar_mcp.models import (
     SearchResult,
 )
 from semantic_scholar_mcp.tools._common import (
+    COMPACT_PAPER_FIELDS,
     DEFAULT_PAPER_FIELDS,
     PAPER_FIELDS_WITH_TLDR,
     build_nested_paper_fields,
@@ -70,7 +71,7 @@ async def search_papers(
     # Build query parameters
     params: dict[str, str | int] = {
         "query": query,
-        "fields": DEFAULT_PAPER_FIELDS,
+        "fields": COMPACT_PAPER_FIELDS,
         "limit": limit,
     }
 
@@ -211,7 +212,7 @@ async def get_paper_citations(
 
     # Build query parameters
     params: dict[str, str | int] = {
-        "fields": build_nested_paper_fields("citingPaper"),
+        "fields": build_nested_paper_fields("citingPaper", compact=True),
         "limit": limit,
     }
 
@@ -288,7 +289,7 @@ async def get_paper_references(
 
     # Build query parameters
     params: dict[str, str | int] = {
-        "fields": build_nested_paper_fields("citedPaper"),
+        "fields": build_nested_paper_fields("citedPaper", compact=True),
         "limit": limit,
     }
 

@@ -25,6 +25,12 @@ DEFAULT_PAPER_FIELDS = (
     "publicationDate,publicationVenue"
 )
 
+# Compact fields for list responses (search, citations, references, top papers)
+# Reduces response size by excluding rarely-needed fields like journal, externalIds, etc.
+COMPACT_PAPER_FIELDS = (
+    "paperId,title,abstract,year,citationCount,authors,venue,openAccessPdf,fieldsOfStudy"
+)
+
 # Default fields to request from the API for comprehensive author data
 DEFAULT_AUTHOR_FIELDS = (
     "authorId,name,affiliations,paperCount,citationCount,hIndex,externalIds,homepage"
@@ -34,7 +40,7 @@ DEFAULT_AUTHOR_FIELDS = (
 PAPER_FIELDS_WITH_TLDR = f"{DEFAULT_PAPER_FIELDS},tldr"
 
 
-def build_nested_paper_fields(prefix: str) -> str:
+def build_nested_paper_fields(prefix: str, *, compact: bool = False) -> str:
     """Build nested paper fields string for API requests.
 
     When fetching citations or references, the API requires field names to be
@@ -42,6 +48,8 @@ def build_nested_paper_fields(prefix: str) -> str:
 
     Args:
         prefix: The prefix to prepend to each field (e.g., 'citingPaper', 'citedPaper').
+        compact: If True, use COMPACT_PAPER_FIELDS instead of DEFAULT_PAPER_FIELDS.
+            Defaults to False for backward compatibility.
 
     Returns:
         A comma-separated string of prefixed field names.
@@ -49,8 +57,11 @@ def build_nested_paper_fields(prefix: str) -> str:
     Example:
         >>> build_nested_paper_fields('citingPaper')
         'citingPaper.paperId,citingPaper.title,citingPaper.abstract,...'
+        >>> build_nested_paper_fields('citingPaper', compact=True)
+        'citingPaper.paperId,citingPaper.title,...'  # fewer fields
     """
-    return f"{prefix}.{DEFAULT_PAPER_FIELDS.replace(',', f',{prefix}.')}"
+    fields = COMPACT_PAPER_FIELDS if compact else DEFAULT_PAPER_FIELDS
+    return f"{prefix}.{fields.replace(',', f',{prefix}.')}"
 
 
 def sort_by_citations[T: HasCitationCount](items: Sequence[T], *, reverse: bool = True) -> list[T]:

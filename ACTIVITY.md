@@ -273,3 +273,20 @@ Append activity log at bottom. Follow the template:
 - `uv run ty check src/`: 3 pre-existing diagnostics (unrelated to this change)
 
 **Blockers:** None
+
+### 2026-02-02 23:22 (CET)
+
+**Task completed:** US-3: Use compact field sets for list responses
+
+**Changes made:**
+- `src/semantic_scholar_mcp/tools/_common.py`: Added `COMPACT_PAPER_FIELDS` constant with essential fields (paperId, title, abstract, year, citationCount, authors, venue, openAccessPdf, fieldsOfStudy). Updated `build_nested_paper_fields()` to accept optional `compact` parameter.
+- `src/semantic_scholar_mcp/tools/papers.py`: Updated import to include `COMPACT_PAPER_FIELDS`. Changed `search_papers` to use `COMPACT_PAPER_FIELDS`. Changed `get_paper_citations` and `get_paper_references` to use `build_nested_paper_fields(..., compact=True)`.
+- `src/semantic_scholar_mcp/tools/authors.py`: Updated import to include `COMPACT_PAPER_FIELDS`. Changed `get_author_top_papers` to use `COMPACT_PAPER_FIELDS`.
+
+**Verification:**
+- `uv run ruff check src/ tests/`: All checks passed!
+- `uv run ruff format src/ tests/`: 34 files left unchanged
+- `uv run pytest -v -m "not integration"`: 347 passed; coverage at 89%
+- `uv run ty check src/`: 3 pre-existing diagnostics (unrelated to this change)
+
+**Blockers:** None
