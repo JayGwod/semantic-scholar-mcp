@@ -69,6 +69,24 @@ class TestDefaultConfiguration:
             settings = Settings()
             assert settings.disable_ssl_verify is False
 
+    def test_default_search_limit(self) -> None:
+        """Test default search limit is 10."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.default_search_limit == 10
+
+    def test_default_papers_limit(self) -> None:
+        """Test default papers limit is 10."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.default_papers_limit == 10
+
+    def test_default_citations_limit(self) -> None:
+        """Test default citations limit is 50."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.default_citations_limit == 50
+
 
 class TestEnvironmentVariableLoading:
     """Tests for environment variable loading."""
@@ -162,6 +180,24 @@ class TestEnvironmentVariableLoading:
         with patch.dict(os.environ, {"DISABLE_SSL_VERIFY": "yes"}):
             settings = Settings()
             assert settings.disable_ssl_verify is True
+
+    def test_default_search_limit_from_environment(self) -> None:
+        """Test loading default search limit from environment."""
+        with patch.dict(os.environ, {"SS_DEFAULT_SEARCH_LIMIT": "25"}):
+            settings = Settings()
+            assert settings.default_search_limit == 25
+
+    def test_default_papers_limit_from_environment(self) -> None:
+        """Test loading default papers limit from environment."""
+        with patch.dict(os.environ, {"SS_DEFAULT_PAPERS_LIMIT": "50"}):
+            settings = Settings()
+            assert settings.default_papers_limit == 50
+
+    def test_default_citations_limit_from_environment(self) -> None:
+        """Test loading default citations limit from environment."""
+        with patch.dict(os.environ, {"SS_DEFAULT_CITATIONS_LIMIT": "100"}):
+            settings = Settings()
+            assert settings.default_citations_limit == 100
 
 
 class TestApiKeyPresenceHandling:
@@ -267,6 +303,103 @@ class TestApiKeyAbsenceHandling:
             assert isinstance(settings.cache_ttl, int)
             assert isinstance(settings.cache_paper_ttl, int)
             assert isinstance(settings.disable_ssl_verify, bool)
+
+
+class TestDefaultLimitsValidation:
+    """Tests for default limits validation and bounds checking."""
+
+    def test_search_limit_clamped_to_max(self) -> None:
+        """Test that search limit above max is clamped to 100."""
+        with patch.dict(os.environ, {"SS_DEFAULT_SEARCH_LIMIT": "200"}):
+            settings = Settings()
+            assert settings.default_search_limit == 100
+
+    def test_search_limit_clamped_to_min(self) -> None:
+        """Test that search limit below min is clamped to 1."""
+        with patch.dict(os.environ, {"SS_DEFAULT_SEARCH_LIMIT": "0"}):
+            settings = Settings()
+            assert settings.default_search_limit == 1
+
+    def test_search_limit_negative_clamped_to_min(self) -> None:
+        """Test that negative search limit is clamped to 1."""
+        with patch.dict(os.environ, {"SS_DEFAULT_SEARCH_LIMIT": "-5"}):
+            settings = Settings()
+            assert settings.default_search_limit == 1
+
+    def test_search_limit_invalid_uses_default(self) -> None:
+        """Test that invalid search limit uses default value."""
+        with patch.dict(os.environ, {"SS_DEFAULT_SEARCH_LIMIT": "invalid"}):
+            settings = Settings()
+            assert settings.default_search_limit == 10
+
+    def test_papers_limit_clamped_to_max(self) -> None:
+        """Test that papers limit above max is clamped to 1000."""
+        with patch.dict(os.environ, {"SS_DEFAULT_PAPERS_LIMIT": "2000"}):
+            settings = Settings()
+            assert settings.default_papers_limit == 1000
+
+    def test_papers_limit_clamped_to_min(self) -> None:
+        """Test that papers limit below min is clamped to 1."""
+        with patch.dict(os.environ, {"SS_DEFAULT_PAPERS_LIMIT": "0"}):
+            settings = Settings()
+            assert settings.default_papers_limit == 1
+
+    def test_papers_limit_invalid_uses_default(self) -> None:
+        """Test that invalid papers limit uses default value."""
+        with patch.dict(os.environ, {"SS_DEFAULT_PAPERS_LIMIT": "abc"}):
+            settings = Settings()
+            assert settings.default_papers_limit == 10
+
+    def test_citations_limit_clamped_to_max(self) -> None:
+        """Test that citations limit above max is clamped to 1000."""
+        with patch.dict(os.environ, {"SS_DEFAULT_CITATIONS_LIMIT": "5000"}):
+            settings = Settings()
+            assert settings.default_citations_limit == 1000
+
+    def test_citations_limit_clamped_to_min(self) -> None:
+        """Test that citations limit below min is clamped to 1."""
+        with patch.dict(os.environ, {"SS_DEFAULT_CITATIONS_LIMIT": "0"}):
+            settings = Settings()
+            assert settings.default_citations_limit == 1
+
+    def test_citations_limit_invalid_uses_default(self) -> None:
+        """Test that invalid citations limit uses default value."""
+        with patch.dict(os.environ, {"SS_DEFAULT_CITATIONS_LIMIT": "xyz"}):
+            settings = Settings()
+            assert settings.default_citations_limit == 50
+
+    def test_search_limit_at_max_boundary(self) -> None:
+        """Test that search limit exactly at max is accepted."""
+        with patch.dict(os.environ, {"SS_DEFAULT_SEARCH_LIMIT": "100"}):
+            settings = Settings()
+            assert settings.default_search_limit == 100
+
+    def test_papers_limit_at_max_boundary(self) -> None:
+        """Test that papers limit exactly at max is accepted."""
+        with patch.dict(os.environ, {"SS_DEFAULT_PAPERS_LIMIT": "1000"}):
+            settings = Settings()
+            assert settings.default_papers_limit == 1000
+
+    def test_citations_limit_at_max_boundary(self) -> None:
+        """Test that citations limit exactly at max is accepted."""
+        with patch.dict(os.environ, {"SS_DEFAULT_CITATIONS_LIMIT": "1000"}):
+            settings = Settings()
+            assert settings.default_citations_limit == 1000
+
+    def test_all_limits_at_min_boundary(self) -> None:
+        """Test that all limits exactly at min (1) are accepted."""
+        with patch.dict(
+            os.environ,
+            {
+                "SS_DEFAULT_SEARCH_LIMIT": "1",
+                "SS_DEFAULT_PAPERS_LIMIT": "1",
+                "SS_DEFAULT_CITATIONS_LIMIT": "1",
+            },
+        ):
+            settings = Settings()
+            assert settings.default_search_limit == 1
+            assert settings.default_papers_limit == 1
+            assert settings.default_citations_limit == 1
 
 
 class TestBooleanEnvironmentVariableHandling:

@@ -436,6 +436,14 @@ All settings can be configured via environment variables.
 | `SEMANTIC_SCHOLAR_API_KEY` | API key for higher rate limits | (none) |
 | `DISABLE_SSL_VERIFY` | Bypass SSL verification for corporate proxies | `false` |
 
+### Default Limits
+
+| Variable | Description | Default | Max |
+|----------|-------------|---------|-----|
+| `SS_DEFAULT_SEARCH_LIMIT` | Default limit for paper search results | `10` | `100` |
+| `SS_DEFAULT_PAPERS_LIMIT` | Default limit for author papers results | `10` | `1000` |
+| `SS_DEFAULT_CITATIONS_LIMIT` | Default limit for citations/references | `50` | `1000` |
+
 ### Cache Settings
 
 | Variable | Description | Default |

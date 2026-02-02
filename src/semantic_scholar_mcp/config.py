@@ -3,6 +3,32 @@
 import os
 
 
+def _parse_int_with_bounds(env_var: str, default: int, min_val: int, max_val: int) -> int:
+    """Parse an integer environment variable with bounds validation.
+
+    Args:
+        env_var: Name of the environment variable.
+        default: Default value if not set or invalid.
+        min_val: Minimum allowed value (inclusive).
+        max_val: Maximum allowed value (inclusive).
+
+    Returns:
+        The parsed and clamped integer value.
+    """
+    raw = os.environ.get(env_var)
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+        if value < min_val:
+            return min_val
+        if value > max_val:
+            return max_val
+        return value
+    except ValueError:
+        return default
+
+
 class Settings:
     """Configuration settings loaded from environment variables.
 
@@ -21,6 +47,9 @@ class Settings:
         cache_enabled: Whether to enable response caching.
         cache_ttl: Default cache TTL in seconds.
         cache_paper_ttl: Cache TTL for paper details in seconds.
+        default_search_limit: Default limit for paper search results.
+        default_papers_limit: Default limit for author papers results.
+        default_citations_limit: Default limit for citations/references results.
     """
 
     def __init__(self) -> None:
@@ -69,6 +98,17 @@ class Settings:
         )
         self.cache_ttl: int = int(os.environ.get("SS_CACHE_TTL", "300"))
         self.cache_paper_ttl: int = int(os.environ.get("SS_CACHE_PAPER_TTL", "3600"))
+
+        # Default limits configuration
+        self.default_search_limit: int = _parse_int_with_bounds(
+            "SS_DEFAULT_SEARCH_LIMIT", default=10, min_val=1, max_val=100
+        )
+        self.default_papers_limit: int = _parse_int_with_bounds(
+            "SS_DEFAULT_PAPERS_LIMIT", default=10, min_val=1, max_val=1000
+        )
+        self.default_citations_limit: int = _parse_int_with_bounds(
+            "SS_DEFAULT_CITATIONS_LIMIT", default=50, min_val=1, max_val=1000
+        )
 
     @property
     def has_api_key(self) -> bool:

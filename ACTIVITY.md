@@ -290,3 +290,20 @@ Append activity log at bottom. Follow the template:
 - `uv run ty check src/`: 3 pre-existing diagnostics (unrelated to this change)
 
 **Blockers:** None
+
+### 2026-02-02 23:31 (CET)
+
+**Task completed:** US-4: Environment variable configuration for default limits
+
+**Changes made:**
+- `src/semantic_scholar_mcp/config.py`: Added `_parse_int_with_bounds()` helper function for validating integer environment variables with bounds. Added three new configuration options: `default_search_limit` (default: 10, max: 100), `default_papers_limit` (default: 10, max: 1000), `default_citations_limit` (default: 50, max: 1000). Values are clamped to min/max bounds if out of range, and invalid values fall back to defaults.
+- `tests/test_config.py`: Added tests for default values (`TestDefaultConfiguration`), environment variable loading (`TestEnvironmentVariableLoading`), and validation/bounds checking (`TestDefaultLimitsValidation` with 18 new tests covering max/min clamping, invalid values, and boundary conditions).
+- `README.md`: Added "Default Limits" section to Configuration Reference documenting the three new environment variables with their defaults and max values.
+
+**Verification:**
+- `uv run ruff check src/ tests/`: All checks passed!
+- `uv run ruff format src/ tests/`: 1 file reformatted (config.py), 33 files left unchanged
+- `uv run pytest -v -m "not integration"`: 367 passed; coverage at 89%
+- `uv run ty check src/`: 3 pre-existing diagnostics (unrelated to this change)
+
+**Blockers:** None
